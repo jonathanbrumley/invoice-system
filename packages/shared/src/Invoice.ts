@@ -55,7 +55,7 @@ const makeRandomLetter = (): string =>  {
  * @returns a random invoice ID with two random characters and four random digits
  */
 export const makeRandomInvoiceId = (): string => {
-  const numericPostfix = Math.floor(Math.random() * 10000);
+  const numericPostfix = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
   return `${makeRandomLetter()}${makeRandomLetter()}${numericPostfix}`;
 }
 
@@ -72,7 +72,7 @@ export interface Invoice {
   /**
    * date on which invoice was received/created - ISO 8601 format, e.g. 2024-01-01
    */
-  createdAt?: string;
+  createdAt: string;
   /**
    * date by which invoice must be paid - ISO 8601 format, e.g. 2024-01-01
    * 
@@ -103,6 +103,7 @@ export interface Invoice {
 export const makeDraftInvoice = (id: string): Invoice => {
   return {
     id,
+    createdAt: new Date().toISOString().split('T')[0], // Today's date
     status: InvoiceStatus.Draft,
     items: [],
     total: '0.00',

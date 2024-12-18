@@ -5,7 +5,7 @@
   "private": true,
   "types": "./src",
   "main": "src/index.ts",
-  "module": "src",
+  "module:jsx": "src",
   "files": [
     "types",
     "dist"

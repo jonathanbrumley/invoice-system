@@ -38,9 +38,9 @@ const makeInvoiceSchema = (
       },
       status: {
         type: "string",
-        enum: [InvoiceStatus.Draft, InvoiceStatus.Pending, InvoiceStatus.Paid],
+        enum: [InvoiceStatus.Deleted, InvoiceStatus.Draft, InvoiceStatus.Pending, InvoiceStatus.Paid],
       },
-      createdAt: { type: "string", pattern: datePattern, nullable: true },
+      createdAt: { type: "string", pattern: datePattern },
       paymentDue: { type: "string", pattern: datePattern, nullable: true },
       description: { type: "string", nullable: true },
       paymentTerms: {

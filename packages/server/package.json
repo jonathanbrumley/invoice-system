@@ -5,7 +5,7 @@
   "private": true,
   "types": "./src",
   "main": "src/index.ts",
-  "module": "src",
+  "module:jsx": "src",
   "files": [
     "types",
     "dist"
@@ -13,6 +13,9 @@
   "scripts": {
     "build": "tamagui-build --skip-types",
     "watch": "tamagui-build --skip-types --watch"
+  },
+  "dependencies": {
+    "@my/shared": "0.0.1"
   },
   "devDependencies": {
     "@tamagui/build": "^1.120.0"
