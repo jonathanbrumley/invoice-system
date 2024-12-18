@@ -1,17 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { validateDraftInvoice, validatePendingInvoice } from "../InvoiceSchema";
-import { InvoiceStatus } from "../Invoice";
+import { makeDraftInvoice, makeRandomInvoiceId, InvoiceStatus } from "../Invoice";
 
 describe("Invoice Validators", () => {
   describe("Draft Invoice Validator", () => {
     it("should validate a valid draft invoice", () => {
-      const draftInvoice = {
-        id: "AB1234",
-        status: InvoiceStatus.Draft,
-        items: [],
-        total: "0.00",
-      };
-
+      const draftInvoice = makeDraftInvoice(makeRandomInvoiceId());
       const isValid = validateDraftInvoice(draftInvoice);
       expect(isValid).toBe(true);
       expect(validateDraftInvoice.errors).toBeNull();

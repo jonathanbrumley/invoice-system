@@ -1,0 +1,20 @@
+{
+  "name": "@my/server",
+  "version": "0.0.1",
+  "sideEffects": [],
+  "private": true,
+  "types": "./src",
+  "main": "src/index.ts",
+  "module": "src",
+  "files": [
+    "types",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tamagui-build --skip-types",
+    "watch": "tamagui-build --skip-types --watch"
+  },
+  "devDependencies": {
+    "@tamagui/build": "^1.120.0"
+  }
+}
