@@ -4,8 +4,8 @@
   "sideEffects": [],
   "private": true,
   "types": "./src",
-  "main": "src/index.tsx",
-  "module:jsx": "src",
+  "main": "src/index.ts",
+  "module": "src",
   "files": [
     "types",
     "dist"

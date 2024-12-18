@@ -6,9 +6,10 @@ export enum PaymentTerm {
 }
 
 export enum InvoiceStatus {
-  Draft = "Draft",
-  Paid = "Paid",
-  Pending = "Pending",
+  Deleted = 'Deleted', // This status is for deleted and unsaved invoices
+  Draft = 'Draft',
+  Paid = 'Paid',
+  Pending = 'Pending',
 }
 
 export interface InvoiceAddress {
@@ -38,7 +39,6 @@ export const makeRandomInvoiceId = (): string => {
 export interface Invoice {
   id: string;          // 2 random uppercased letters followed by 4 random numbers.
   status: InvoiceStatus;
-
   createdAt?: string;  // ISO 8601 format, e.g. 2024-01-01
   paymentDue?: string; // ISO 8601 format, e.g. 2024-01-01
   description?: string;
@@ -56,6 +56,6 @@ export const makeDraftInvoice = (): Invoice => {
     id: makeRandomInvoiceId(),
     status: InvoiceStatus.Draft,
     items: [],
-    total: "0.00",
+    total: '0.00',
   }
 }
