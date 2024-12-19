@@ -1,6 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { openStore } from '@my/server';
 
+/**
+ * GET invoice
+ * 
+ * @param req method should be 'GET', query must contain id={desired invoice id}
+ * @param res will contain an Invoice in the json body, otherwise an error message and details
+ */
 export default async function invoiceHandler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
 

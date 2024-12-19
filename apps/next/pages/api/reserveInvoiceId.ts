@@ -1,6 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { openStore } from '@my/server';
 
+/**
+ * POST reserveInvoiceId
+ * 
+ * @param req method should be 'POST'
+ * @param res will contain the resulting status and reserved id in the json body, otherwise an error message and details
+ */
 export default async function reserveInvoiceIdHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: 'Method not allowed' });

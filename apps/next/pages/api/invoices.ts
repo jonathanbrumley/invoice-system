@@ -2,6 +2,12 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { InvoiceStatus } from '@my/shared';
 import { openStore } from '@my/server';
 
+/**
+ * GET invoices
+ * 
+ * @param req method should be 'GET', query may contain status (Pending, Draft, Paid), limit (e.g 100) and offset (e.g. 10)
+ * @param res will contain an array of InvoiceSummary in the json body, otherwise an error message and details
+ */
 export default async function invoicesHandler(req: NextApiRequest, res: NextApiResponse) {
   const { status, limit, offset } = req?.query;
 
