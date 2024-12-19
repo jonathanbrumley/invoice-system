@@ -133,3 +133,44 @@ export class SQLiteInvoiceStore implements InvoiceStore {
     return this.getDb().all(query, queryParams);
   }
 }
+
+interface MyGlobals {
+  sharedSQLiteDbMap?: Map<string, Promise<SQLiteInvoiceStore | undefined>>;
+}
+
+export const openSharedSQLiteInvoiceStore = async (dbFilePath: string): Promise<InvoiceStore | undefined> => {
+  let myGlobals = global as any as MyGlobals;
+  if (!myGlobals.sharedSQLiteDbMap) {
+    myGlobals.sharedSQLiteDbMap = new Map<string, Promise<SQLiteInvoiceStore>>();
+  }
+  const connectionMap = myGlobals.sharedSQLiteDbMap;
+  if (!connectionMap.get(dbFilePath)) {
+    connectionMap.set(dbFilePath, SQLiteInvoiceStore.initialize(dbFilePath));
+  }
+  try {
+    const store = await connectionMap.get(dbFilePath);
+    return store;
+  } catch {
+    return undefined;
+  }
+}
+
+const closeAll = async (): Promise<void> => {
+  let myGlobals = global as any as MyGlobals;
+  const connectionMap = myGlobals.sharedSQLiteDbMap;
+  myGlobals.sharedSQLiteDbMap = undefined;
+  if (connectionMap) {
+    for (const storePromise of connectionMap.values()) {
+      const store = await storePromise;
+      if (store) {
+        store.close();
+      }
+    }
+  }
+}
+
+process.on('SIGINT', closeAll);
+process.on('SIGTERM', closeAll);
+process.on('exit', (code) => {
+  closeAll();
+});

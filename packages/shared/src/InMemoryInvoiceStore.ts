@@ -25,7 +25,7 @@ export class InMemoryInvoiceStore implements InvoiceStore {
       }
     }
     if (!newId) {
-      throw new Error("Could not reserve an invoice ID after 100 tries");
+      throw new Error('Could not reserve an invoice ID after 100 tries');
     }
     return newId;
   }
