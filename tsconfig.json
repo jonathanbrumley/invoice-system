@@ -8,7 +8,7 @@
       "app/*": ["./packages/app/*"],
       "@my/ui/*": ["./packages/ui/*"],
       "@my/shared/*": ["./packages/shared/*"],
-      "@my/server/*": ["./packages/server/*"]
+      "@my/server/*": ["./packages/server/*"],
     }
   },
   "extends": "./tsconfig.base",
