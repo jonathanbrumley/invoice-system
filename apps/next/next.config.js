@@ -34,6 +34,16 @@ module.exports = () => {
     typescript: {
       ignoreBuildErrors: true,
     },
+    restrictStrictMode: true,
+    webpack(config) {
+      config.module.rules.push({
+        test: /\.svg$/i,
+        issuer: /\.[jt]sx?$/,
+        use: ['@svgr/webpack'],
+      });
+  
+      return config;
+    },
     modularizeImports: {
       '@tamagui/lucide-icons': {
         transform: `@tamagui/lucide-icons/dist/esm/icons/{{kebabCase member}}`,

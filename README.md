@@ -1,100 +1,99 @@
-# Tamagui + Solito + Next + Expo Monorepo
+# Invoice System
 
-## 🔦 About
+## About
 
-This monorepo is a starter for an Expo + Next.js + Tamagui + Solito app.
+This is a desktop invoice system based on the Tamagui / Solito starter project.
+It is a single page web application using a local SQLite file to store invoice data.
 
-Many thanks to [@FernandoTheRojo](https://twitter.com/fernandotherojo) for the Solito starter monorepo which this was forked from. Check out his [talk about using expo + next together at Next.js Conf 2021](https://www.youtube.com/watch?v=0lnbdRweJtA).
+## 🏁 Start the app
 
-## 📦 Included packages
+From the command line:
+- Install yarn (using homebrew on MacOs)
+- Install dependencies: `yarn`
+- Run the server locally: `yarn web`
 
-- [Tamagui](https://tamagui.dev) 🪄
-- [solito](https://solito.dev) for cross-platform navigation
-- Expo SDK
-- Next.js
-- Expo Router
+Browse to http://localhost:3000 to use the application
+
+
+## Test the app
+
+From the command line:
+- Run `yarn test`
+
+There is one test which tests launching the app and it sometimes fails due to timeout.
 
 ## 🗂 Folder layout
 
 The main apps are:
 
-- `expo` (native)
-- `next` (web)
-
-- `packages` shared packages across apps
-  - `ui` includes your custom UI kit that will be optimized by Tamagui
+- `next` root directory for the desktop/web app
+  - `pages` boilerplate plus some example pages I didn't delete
+    - `api` requeset handlers for the server-side API which talk to the database
+- `packages` 
+  - `shared` shared between server and client
+    - `Invoice.ts` data model and design decisions about the data model
+    - `InvoiceSchema.ts` validation schema for data model using ajv
+    - `InvoiceStore.ts` an interface for Invoice storage
+    - `InMemoryInvoiceStore.ts` an invoice store used as a mock for tests
+  - `server` files used by the next-js server
+    - `SQLiteInvoiceStore.ts` a simple InvoiceStore implementation using a local SQLite db file
+    - `store.ts` a singleton which ensures handlers share a database connection
+  - `ui` components
+    - 
   - `app` you'll be importing most files from `app/`
     - `features` (don't use a `screens` folder. organize by feature.)
-    - `provider` (all the providers that wrap the app, and some no-ops for Web.)
+      - `screen.tsx` - contains the homescreen with connection, navigation state
+    - `provider` (contains the TamaguiProvider and ToastProvider)
 
-You can add other folders inside of `packages/` if you know what you're doing and have a good reason to.
+### Dependencies installed not found in the starter project
 
-> [!TIP]
-> Switching from `app` to `pages` router:
->
-> - remove `app` folder from `apps/next`
-> - move `index.tsx` from `pages-example` to `pages` folder
-> - rename `pages-example-user` to `user` and be sure to update `linkTarget` in `screen.tsx` to `user` as well
-> - delete `SwitchRouterButton.tsx` component and remove it from `screen.tsx` and `packages/ui/src/index.tsx`
-> - search for `pagesMode` keyword and remove it
+- `sqlite` and `sqlite3` for validation
+- `ajv`, `ajv-formats` and `ajv-errors` for draft and pending invoice validation and errors
+- `lodash` using cloneDeep, set, and get for form mutators
+- `nanoid` used to generate unique ids for items within an invoice
 
-## 🏁 Start the app
+Notes:
+- I tried using `react-final-form` which is a form library with some validation and state management - but forms don't seem to work with Tamagui so I rolled my own form and state management for this simple case.
 
-- Install dependencies: `yarn`
 
-- Next.js local dev: `yarn web`
+### Design choices
 
-To run with optimizer on in dev mode (just for testing, it's faster to leave it off): `yarn web:extract`. To build for production `yarn web:prod`.
-
-To see debug output to verify the compiler, add `// debug` as a comment to the top of any file.
-
-- Expo local dev: `yarn native`
-
-## UI Kit
-
-Note we're following the [design systems guide](https://tamagui.dev/docs/guides/design-systems) and creating our own package for components.
-
-See `packages/ui` named `@my/ui` for how this works.
-
-## 🆕 Add new dependencies
-
-### Pure JS dependencies
-
-If you're installing a JavaScript-only dependency that will be used across platforms, install it in `packages/app`:
-
-```sh
-cd packages/app
-yarn add date-fns
-cd ../..
-yarn
-```
-
-### Native dependencies
-
-If you're installing a library with any native code, you must install it in `expo`:
-
-```sh
-cd apps/expo
-yarn add react-native-reanimated
-cd ..
-yarn
-```
-
-## Update new dependencies
-
-### Pure JS dependencies
-
-```sh
-yarn upgrade-interactive
-```
-
-You can also install the native library inside of `packages/app` if you want to get autoimport for that package inside of the `app` folder. However, you need to be careful and install the _exact_ same version in both packages. If the versions mismatch at all, you'll potentially get terrible bugs. This is a classic monorepo issue. I use `lerna-update-wizard` to help with this (you don't need to use Lerna to use that lib).
-
-You may potentially want to have the native module transpiled for the next app. If you get error messages with `Cannot use import statement outside a module`, you may need to use `transpilePackages` in your `next.config.js` and add the module to the array there.
-
-### Deploying to Vercel
-
-- Root: `apps/next`
-- Install command to be `yarn set version stable && yarn install`
-- Build command: leave default setting
-- Output dir: leave default setting
+- `API`
+  - implemented a simple REST API.  GraphQL would be another possibility but more complex than needed for this use case.
+  - `invoices`
+    - returns an array of invoice summaries. A summary is the information needed in the inventory page
+    - invoices are default sorted by last created, which is usable because the most recent work usually shows up on top
+      - another option would be to sort by last modified, but that requires another field
+    - optional parameters support filtering - only status is implemented but could be extended
+    - pagination is supported as an optional limit and offset, but it's not used by the API
+  - `upsertInvoice`
+    - supports creating or updating an invoice. The id and status are contained within the body which is an invoice
+  - `get`
+    - returns the invoice selected from the inventory page
+  - `requestInvoiceId`
+    - this is used when creating a new invoice to reserve IDs so that we can show the ID while the user is editing the invoice.
+    - the invoice is reserved in the `Deleted` state so it doesn't show up in the inventory page until saved
+    - if an invoice is discarded, we don't hard delete but could clean up such invoices at a later point
+    - an alternative would be to generate the ID but not to reserve it, but this could in an unlikely situation cause a conflict on save.
+- `SQLite` is simple for this desktop use case, and doesn't require authentication or providing a key to a shared database
+  - a future improvement would be to use a hosted database
+  - the database could be implemented using NoSQL (Cosmos, Dynamo, Mongo) or a transactional database like Postgres
+- `State Management`
+  - most application state is hosted in the HomeScreen, which provides a setter for the Invoice being viewed or edited
+  - if we support localStorage, we could always store into localStorage when setting the Invoice, then restore from localStorage on mount
+  - to support discarding edits, we would record a backup copy of the invoice in the EditInvoice component. This could also be stored and restored in localStorage
+- `Deleted` invoices remain in the database with a `Deleted` status.  They don't show up in search but could be recovered.
+  - A future improvement for financial systems like this would be to keep an audit and change history, including:
+    - each version of the invoice in time history
+    - the user who made the change (created, edited, marked as paid, deleted)
+- `Navigation`
+  - Navigation is all based on buttons in the app, it is currently a single page URL 
+  - A future improvement would be to support routes for viewing and editing invoices, then we could link and browsing to an invoice using the URL.
+- `Errors`
+  - the ClientInvoiceStore supports updating the ConnectionStatus
+  - the error could be shown by a Toast or in the header
+- `Dates` are represented as plain dates in YYYY-MM-DD format.
+  - This avoids confusion with times and problems with timezones
+  - The payment terms involves date calculations by day, and including the time of day can confuse matters
+- `Currency` is represented using a string format with two decimal digits.
+  - best practice is to avoid using floating point for storing or calculating money, since rounding errors may cause calculations to be off

@@ -3,9 +3,12 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
     "paths": {
       "app/*": ["./packages/app/*"],
-      "@my/ui/*": ["./packages/ui/*"]
+      "@my/ui/*": ["./packages/ui/*"],
+      "@my/shared/*": ["./packages/shared/*"],
+      "@my/server/*": ["./packages/server/*"],
     }
   },
   "extends": "./tsconfig.base",

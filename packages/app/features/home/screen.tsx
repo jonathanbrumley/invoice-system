@@ -1,148 +1,75 @@
+import React, { useState, useEffect } from 'react';
+import { XStack, YStack } from 'tamagui';
+import { Invoice, InvoiceStore, InvoiceStoreFilterOptions, InvoiceSummary, makeDraftInvoice } from '@my/shared';
 import {
-  Anchor,
-  Button,
-  H1,
-  Paragraph,
-  Separator,
-  Sheet,
-  useToastController,
-  SwitchThemeButton,
-  SwitchRouterButton,
-  XStack,
-  YStack,
-} from '@my/ui'
-import { ChevronDown, ChevronUp, X } from '@tamagui/lucide-icons'
-import { useState } from 'react'
-import { Platform } from 'react-native'
-import { useLink } from 'solito/navigation'
+  defaultConnectionStatus,
+  ConnectionStatusProps,
+  ClientInvoiceStore,
+  Sidebar,
+  InvoiceInventory,
+  ViewInvoice,
+  EditInvoice,
+} from '@my/ui';
 
-export function HomeScreen({ pagesMode = false }: { pagesMode?: boolean }) {
-  const linkTarget = pagesMode ? '/pages-example-user' : '/user'
-  const linkProps = useLink({
-    href: `${linkTarget}/nate`,
-  })
+export interface HomeScreenProps {
+  createInvoiceStore?: (setConnectionStatus: (props: ConnectionStatusProps) => void) => InvoiceStore;
+}
 
+export function HomeScreen(props?: HomeScreenProps) {
+  const [connectionStatus, setConnectionStatus] = useState(defaultConnectionStatus);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
+  const [filter, setFilter] = useState<InvoiceStoreFilterOptions>({});
+  const [isEditing, setEditing] = useState(false);
+
+  const client = props?.createInvoiceStore ?
+    props.createInvoiceStore(setConnectionStatus) :
+    new ClientInvoiceStore(setConnectionStatus);
+
+  const makeInvoice = async () => {
+    const id = await client.reserveNewId();
+    if (id) {
+      setInvoice(makeDraftInvoice(id));
+      setEditing(true);
+    }
+  }
+
+  const showInvoices = async () => {
+    setEditing(false);
+    setInvoice(null);
+    const invoices = await client.list(filter);
+    setInvoices(invoices);
+  }
+
+  const openInvoice = async (id: string) => {
+    const invoice = await client.get(id);
+    if (invoice) {
+      setInvoice(invoice);
+    }
+  }
+
+  // Show invoices on the first mount
+  useEffect(() => {
+    showInvoices();
+  }, []);
   return (
-    <YStack
-      f={1}
-      jc="center"
-      ai="center"
-      gap="$8"
-      p="$4"
-      bg="$background"
-    >
-      <XStack
-        pos="absolute"
-        w="100%"
-        t="$6"
-        gap="$6"
-        jc="center"
-        fw="wrap"
-        $sm={{ pos: 'relative', t: 0 }}
-      >
-        {Platform.OS === 'web' && (
-          <>
-            <SwitchRouterButton pagesMode={pagesMode} />
-            <SwitchThemeButton />
-          </>
-        )}
+      <XStack height="100%" width="100%">
+        <Sidebar></Sidebar>
+        <YStack alignItems="center" backgroundColor="#0C0E16" padding="$7" flex={1}>
+          <YStack width={800} overflow="auto">
+            {
+              invoice && isEditing ? (<EditInvoice invoice={invoice} setInvoice={setInvoice} />) :
+              invoice && !isEditing ? (<ViewInvoice invoice={invoice}/>) :
+              (<InvoiceInventory
+                invoices={invoices}
+                setFilter={setFilter}
+                makeInvoice={makeInvoice}
+                openInvoice={openInvoice}
+              />)
+            }
+          </YStack>
+        </YStack>
       </XStack>
-
-      <YStack gap="$4">
-        <H1
-          ta="center"
-          col="$color12"
-        >
-          Welcome to Tamagui.
-        </H1>
-        <Paragraph
-          col="$color10"
-          ta="center"
-        >
-          Here's a basic starter to show navigating from one screen to another.
-        </Paragraph>
-        <Separator />
-        <Paragraph ta="center">
-          This screen uses the same code on Next.js and React Native.
-        </Paragraph>
-        <Separator />
-      </YStack>
-
-      <Button {...linkProps}>Link to user</Button>
-
-      <SheetDemo />
-    </YStack>
-  )
+  );
 }
 
-function SheetDemo() {
-  const toast = useToastController()
-
-  const [open, setOpen] = useState(false)
-  const [position, setPosition] = useState(0)
-
-  return (
-    <>
-      <Button
-        size="$6"
-        icon={open ? ChevronDown : ChevronUp}
-        circular
-        onPress={() => setOpen((x) => !x)}
-      />
-      <Sheet
-        modal
-        animation="medium"
-        open={open}
-        onOpenChange={setOpen}
-        snapPoints={[80]}
-        position={position}
-        onPositionChange={setPosition}
-        dismissOnSnapToBottom
-      >
-        <Sheet.Overlay
-          animation="lazy"
-          enterStyle={{ opacity: 0 }}
-          exitStyle={{ opacity: 0 }}
-        />
-        <Sheet.Handle bg="$gray8" />
-        <Sheet.Frame
-          ai="center"
-          jc="center"
-          gap="$10"
-          bg="$color2"
-        >
-          <XStack gap="$2">
-            <Paragraph ta="center">Made by</Paragraph>
-            <Anchor
-              col="$blue10"
-              href="https://twitter.com/natebirdman"
-              target="_blank"
-            >
-              @natebirdman,
-            </Anchor>
-            <Anchor
-              color="$purple10"
-              href="https://github.com/tamagui/tamagui"
-              target="_blank"
-              rel="noreferrer"
-            >
-              give it a ⭐️
-            </Anchor>
-          </XStack>
-
-          <Button
-            size="$6"
-            circular
-            icon={ChevronDown}
-            onPress={() => {
-              setOpen(false)
-              toast.show('Sheet closed!', {
-                message: 'Just showing how toast works...',
-              })
-            }}
-          />
-        </Sheet.Frame>
-      </Sheet>
-    </>
-  )
-}
