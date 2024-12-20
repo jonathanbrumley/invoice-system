@@ -57,6 +57,7 @@ const makeInvoiceSchema = (
         items: {
           type: "object",
           properties: {
+            id: { type: "string", nullable: false },
             name: { type: "string", nullable: true },
             quantity: { type: "integer", minimum: 0, nullable: true },
             price: { type: "string", pattern: moneyPattern, nullable: true },
@@ -89,7 +90,7 @@ const ajv = new Ajv({allErrors: true});
 addFormats(ajv); // Adds support for the "email" format
 addErrors(ajv); // Adds support for custom errors
 
-const draftInvoiceSchema = makeInvoiceSchema(["id", "status", "items", "total"], [], []);
+const draftInvoiceSchema = makeInvoiceSchema(["id", "status", "items", "total"], [], ["id"]);
 export const validateDraftInvoice = ajv.compile(draftInvoiceSchema);
 
 const pendingInvoiceSchema = makeInvoiceSchema(
@@ -107,5 +108,5 @@ const pendingInvoiceSchema = makeInvoiceSchema(
     "total",
   ],
   ["street", "city", "postCode", "country"],
-  ["name", "quantity", "price", "total"]);
+  ["id", "name", "quantity", "price", "total"]);
   export const validatePendingInvoice = ajv.compile(pendingInvoiceSchema);

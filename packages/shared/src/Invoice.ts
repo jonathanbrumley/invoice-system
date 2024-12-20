@@ -1,3 +1,5 @@
+import {nanoid} from 'nanoid';
+import _ from 'lodash';
 
 export enum PaymentTerm {
   Net1Day = 1,
@@ -28,6 +30,10 @@ export interface InvoiceAddress {
  * Pending and Paid invoices require all fields, Draft invoices do not require all fields.
  */
 export interface InvoiceItem {
+  /**
+   * unique id of the item
+   */
+  id: string;
   /**
    *  Name of the item
    */
@@ -65,7 +71,8 @@ export const makeRandomInvoiceId = (): string => {
  */
 export interface Invoice {
   /**
-   *  Invoice IDs are 2 random uppercased letters followed by 4 random numbers, e.g. RT3080
+   *  Invoice IDs are automatically assigned by the system to be 2 random uppercased letters
+   *  followed by 4 random numbers, e.g. RT3080
    */
   id: string;
   status: InvoiceStatus;
@@ -108,4 +115,69 @@ export const makeDraftInvoice = (id: string): Invoice => {
     items: [],
     total: '0.00',
   }
+}
+
+/**
+ * Takes an ajv instance name and path and creates a lodash path
+ * @param field top level field name or field within the specified instance
+ * @param instance optional ajv instancePath i.e. '/items/0' or '/clientAddress' 
+ * @returns a lodash path such as 'items[0].total" or "clientAddress.street"
+ */
+const makeInvoiceLodashPath = (field: string, instance?: string): string => {
+  if (instance) {
+    const path = instance.split('/');
+    if (path.length == 0) {
+      return field;
+    }
+    if (path.length == 1 || path[0] !== '') {
+      throw new Error('path must start with forward slash')
+    }
+    if (path.length == 2) {
+      return `${path[1]}.${field}`;
+    }
+    if (path.length == 3) {
+      if (isNaN(parseInt(path[2]))) {
+        throw new Error('second element of invoice path must be an index');
+      }
+       // e.g. /items/0 => items[0].field
+       return `${path[1]}[${path[2]}].${field}`;
+    }
+    throw new Error('not a valid invoice path');
+  }
+  return field;
+}
+
+/**
+ * Creates a setter for a field of an invoice using an ajv instance and field name
+ * @param invoice original invoice to copy
+ * @param field the field to change
+ * @param setInvoice a setter which will change the invoice to the new value
+ * @param instance optional path to the object containing the field to be set, in ajv format, e.g. /items/0
+ * @returns a setter which can be passed to an onChange method
+ */
+export const makeSetInvoiceField = 
+  (invoice: Invoice, field: string, setInvoice: (newInvoice: Invoice) => void, instance?: string): 
+  (value: string) => void => {
+  const lodashPath = makeInvoiceLodashPath(field, instance);
+  const setter = (value: string) => {
+    const copiedInvoice = _.cloneDeep(invoice);
+    _.set(copiedInvoice, lodashPath, value);
+    setInvoice(copiedInvoice);
+  };
+  return setter;
+}
+
+/**
+ * Creates a command which will copy and set a copy of an invoice but with an added item
+ * @param invoice the original invoice tp copy
+ * @param setInvoice a setter which will change the invoice to the new value
+ * @returns a command which can be used as a parameter to onClick
+ */
+export const makeAddInvoiceItem = (invoice: Invoice, setInvoice: (newInvoice: Invoice) => void): () => void => {
+  const command = () => {
+    const newItem: InvoiceItem = {id: nanoid()};
+    const newItems = [...invoice.items, newItem];
+    setInvoice({...invoice, items: newItems});
+  };
+  return command;
 }

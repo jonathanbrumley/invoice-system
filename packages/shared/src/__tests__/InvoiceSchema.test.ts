@@ -73,7 +73,7 @@ describe("Invoice Validators", () => {
           country: "USA",
         },
         items: [
-          { name: "Development", quantity: 1, price: "5000.00", total: "5000.00" },
+          { id: "item1", name: "Development", quantity: 1, price: "5000.00", total: "5000.00" },
         ],
         total: "5000.00",
       };
